@@ -5,6 +5,7 @@ from pynput import mouse, keyboard
 from multiprocessing import Queue
 import win32gui
 import re
+import time
 
 altTabFunc = 'タスクの切り替え'
 
@@ -18,6 +19,7 @@ class Monitor:
 		self.from_y = 0
 		self.specialKey = None
 		self.pressed = 0
+		self.first_time = 0
 	
 	def count(self):
 		self.counter += 1
@@ -41,6 +43,14 @@ class Monitor:
 			self.from_x = x
 			self.from_y = y
 			self.call()
+			if self.first_time == 0:
+				self.first_time = time.perf_counter()
+			else:
+				t = time.perf_counter() - self.first_time
+				self.first_time = 0
+				print('t : : : ' + str(t))
+				if t <= 0.5:
+					self.output.put(btn.group() + 'Double' + 'x=' + str(x) + 'y=' + str(y))
 		if not pressed:
 			btn = re.search(r'(left)|(right)|(middle)', str(button))
 			print(btn.group())
@@ -85,13 +95,13 @@ class Monitor:
 					print('ctrl + ?')
 					self.output.put(self.specialKey[0] + '+' + k.lower())
 			elif self.specialKey:
-				print('special ? + ?')
+				print('special ? + ?' + self.specialKey[0])
 				self.output.put(self.specialKey[0] + '+' + key.char)
 			else:
 				print('PUT : only ' + key.char)
 				self.output.put(key.char)
 				
-			self.pressed = 0
+			#self.pressed = 0
 		except AttributeError:
 			print('special key {0} released'.format(key))
 			
@@ -100,7 +110,7 @@ class Monitor:
 				self.output.put(self.specialKey)
 			else:
 				print('sp : only ')
-				self.output.put(self.specialKey)
+				#self.output.put(self.specialKey)
 				
 				
 			self.specialKey = None
