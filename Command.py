@@ -7,25 +7,30 @@
 
 from queue import Queue
 import pyautogui
+import win32gui
+import subprocess
+import os
 
 def alphaOnly(str):
-	return str.count() == 1
+	print(len(str))
+	return len(str) == 1
 
 def specialKey(str):
-	return str.count() == 3
+	return len(str) == 3
 
 def clickPoint(str):
 	xIdx = str.find('x')+2
 	yIdx = str.find('y')+2
 	x = ''
 	y = ''
-	while not str[xIdx] == ' ':
+	while not str[xIdx] == 'y':
 		x += str[xIdx]
 		xIdx += 1
-	while not str[yIdx] == '\0':
+	while not str[yIdx] == '\n':
 		y += str[yIdx]
 		yIdx += 1
 	
+	print(x +' '+ y)
 	return int(x), int(y)
 
 def dragPoint(str):
@@ -37,24 +42,26 @@ def dragPoint(str):
 	fry = ''
 	tox = ''
 	toy = ''
-	while not str[fx] == ' ':
+	while not str[fx] == 'f':
 		frx += str[fx]
 		fx += 1
-	while not str[fy] == ' ':
+	while not str[fy] == 't':
 		fry += str[fy]
 		fy += 1
-	while not str[tx] == ' ':
+	while not str[tx] == 't':
 		tox += str[tx]
 		tx += 1
-	while not str[ty] == ' ':
+	while not str[ty] == '\n':
 		toy += str[ty]
 		ty += 1
 	
 	return int(frx), int(fry), int(tox), int(toy)
-def commandsExe(commands):
+	
+def commandExe(commands):
+	error = 0
 	while not commands.empty():
 		str = commands.get()
-		print(str)
+		print('command : ' + str)
 		if alphaOnly(str):
 			pyautogui.press( str[0].lower() )
 		
@@ -96,5 +103,51 @@ def commandsExe(commands):
 			if 'right' in str:
 				pyautogui.click(tox, toy, button='right')
 				
-		else:
+		elif 'appName' in str:
+			idx = str.find('appName')+7
+			appName = ''
+			while not idx == len(str):
+				appName += str[idx]
+				idx += 1
+			
+			num = win32gui.FindWindow(None, appName)
+			if num != 0:
+				win32gui.SetForegroundWindow(num)
+			else:
+				dirUser = os.listdir(os.environ['APPDATA'] + r'\Microsoft\Windows\Start Menu\Programs')
+				dirSys = os.listdir(os.environ['ALLUSERSPROFILE'] + r'\Microsoft\Windows\Start Menu\Programs')
+				finded = 0
+				
+				p_temp = Path(dirSys)
+				list = list(p_temp.glob('**/*.lnk'))
+				for l in list:
+					s = os.path.basename(l).replace('.lnk', '')
+					print(s)
+					if s.lower() in appName.lower():
+						wshell = win32com.client.Dispatch("WScript.shell")
+						shortcut = wshell.CreateShortcut(str(l))
+						subprocess.Popen(shortcut.TargetPath)
+						finded = 1
+						break
+				
+				if not finded:
+					p_temp = Path(dirUser)
+					list = list(p_temp.glob('**/*.lnk'))
+					for l in list:
+						s = os.path.basename(l).replace('.lnk', '')
+						print(s)
+						if s.lower() in appName.lower():
+							wshell = win32com.client.Dispatch("WScript.shell")
+							shortcut = wshell.CreateShortcut(str(l))
+							subprocess.Popen(shortcut.TargetPath)
+							finded = 1
+							break
+				
+				if not finded:
+					error = 1
+				
+		else: # space backspace enter
 			pyautogui.press(str.lower())
+			
+	return error
+		

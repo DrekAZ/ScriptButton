@@ -9,31 +9,39 @@ import Command # Command.py
 
 
 class JsonFiles:
-	def __init__(self, output=None, appName=None, scriptName=None):
-		pass
-	def write(self, output, appName, scriptName):
-		scriptName = scriptName + '.txt'
-		path = appName + '/'
+	def __init__(self, output, appName, scriptName):
+		self.output = output
+		self.appName = appName + '/'
+		self.scriptName = scriptName
+		
+		
+	def write(self):
+		self.scriptName += '.txt'
+		path = self.appName
 		
 		if not os.path.exists(path):
 			os.makedirs(path)
 		
-		with open(os.path.join(path, scriptName), mode='w') as f:
-			while not output.empty():
-				f.write(output.get())
+		with open(os.path.join(path, self.scriptName), mode='w', encoding='utf-8') as f:
+			while not self.output.empty():
+				f.write(self.output.get())
 				f.write('\n')
 		
-		print('THANKL')
+		print('Write End')
 
-	def read(self, appName, scriptName):
-		path = appName + '/' + scriptName
+	def read(self):
+		print('UNKOY(')
+		error = 0
+		path = self.appName + self.scriptName
+		print('! ' + path)
 		command = Queue()
-		print(path)
-		with open(path, encoding='utf-8') as f:
-			print(f)
-			command.put(f)
+		with open(path) as f:
+			s = f.read()
+			print(s)
+			command.put(s)
 		
-		Command.commandExe(command)
+		error = Command.commandExe(command)
+		return error
 
 def main(output, scriptName, appName):
 	scriptName = 'UNddddO'

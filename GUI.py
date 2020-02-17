@@ -24,6 +24,7 @@ class GUI(QMainWindow):
 		self.process = None
 		self.scriptName = ''
 		self.tabs = QTabWidget()
+		self.menu = None
 		
 		self.initUI()
 	
@@ -44,9 +45,9 @@ class GUI(QMainWindow):
 		
 		# menubar
 		menubar = self.menuBar()
-		menu = menubar.addMenu('&メニュー')
-		menu.addAction(recIcon)
-		self.add(menu)
+		self.menu = menubar.addMenu('&メニュー')
+		self.menu.addAction(recIcon)
+		self.add()
 		
 		self.tabs.setTabsClosable(True)
 		self.tabs.setMovable(True)
@@ -72,17 +73,30 @@ class GUI(QMainWindow):
 			process.close()
 			self.inputDialog()
 			if self.scriptName != '':
+				print ('START&')
+				appName = ''
 				while not output.empty():
-					print(output.get())
+					str = output.get()
+					
+					if 'appName' in str:
+						idx = str.find('appName')+7
+						for i in range(idx, len(str)):
+							appName += str[idx]
+							idx += 1
+							
+						break
+					#print(output.get())
+					print(appName)
 				
-				#JsonFiles(output, appName, self.scriptName).write()
+				JsonFiles(output, appName, self.scriptName).write()
+				self.add(self.menu)
 		
 	def inputDialog(self):
 		scriptName, ok = QInputDialog.getText(self, 'Script Name', 'Enter script name:')
 		if ok:
 			self.scriptName = scriptName
 			
-	def add(self, menu):
+	def add(self):
 		path = os.getcwd()
 		path = path + '/'
 		for dir in os.listdir(path):
@@ -92,7 +106,7 @@ class GUI(QMainWindow):
 				appSelect = QAction(dir, self)
 				#appSelect.setStatusTip(dir)
 				appSelect.triggered.connect(lambda: self.click_appSelect(nowDir))
-				menu.addAction(appSelect)
+				self.menu.addAction(appSelect)
 			
 	def click_appSelect(self, dir):
 		print(dir)
@@ -101,17 +115,24 @@ class GUI(QMainWindow):
 		listFiles = os.listdir(dir)
 		for i, file in enumerate(listFiles):
 			if os.path.isfile(dir + '/' + file):
-				print(file)
-				button = QPushButton(file, self)
-				button.clicked.connect(JsonFiles(None, dir, file).read)
+				print('e : ' + file)
+				button = QPushButton(file)
+				jsonFiles = JsonFiles(None, dir, file)
+				button.clicked.connect(lambda: self.btnClick(dir, file))
 				#tab.layout.addStretch(1)
 				tab.layout.addWidget(button)
 			
 		tab.setLayout(tab.layout)
 		self.tabs.addTab(tab, dir)
-		print(type(command))
+		#print(type(command))
 		
+	def btnClick(self, dir, file):
+		jsonFiles = JsonFiles(None, dir, file)
+		error = jsonFiles.read()
+		if error == 1:
+			QMessageBox.infomation(self, "Error", "Error : app can not find")
 		
+	
 
 if __name__ == "__main__":
 	app = QApplication(sys.argv)

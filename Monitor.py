@@ -17,7 +17,7 @@ class Monitor:
 		self.appName = ''
 		self.from_x = 0
 		self.from_y = 0
-		self.specialKey = None
+		self.specialKey = ''
 		self.pressed = 0
 		self.first_time = 0
 	
@@ -75,9 +75,12 @@ class Monitor:
 			print('special key {0} pressed'.format(key))
 			print(str(key))
 			spkey = re.search(r'(shift)|(alt)|(ctrl)|(space)|(enter)|(backspace)|(tab)|(cmd)|(up)|(left)|(down)|(right)|(esc)|(home)|(end)|(insert)|(delete)|(f.)', str(key)) # ctrl a \x11
-			self.specialKey = spkey.group()
-			print(spkey)
-			print('SPECIAL :'+self.specialKey)
+			if not (self.specialKey == 'alt' and spkey.group() == 'tab'):
+				self.specialKey = spkey.group()
+			else:
+				print('alt + tab')
+				self.pressed = 1
+			print('SPECIAL :' + self.specialKey)
 			#self.output.put(key)
 		
 		
@@ -105,15 +108,16 @@ class Monitor:
 		except AttributeError:
 			print('special key {0} released'.format(key))
 			
-			if self.specialKey and self.pressed == 0:
-				print('RE SP : ' + self.specialKey)
+			if self.specialKey and not (self.pressed):
+				print('SP only : ' + self.specialKey)
 				self.output.put(self.specialKey)
+				self.specialKey = ''
 			else:
-				print('sp : only ')
+				print('conbination something special + _ ')
 				#self.output.put(self.specialKey)
 				
 				
-			self.specialKey = None
+			#self.specialKey = ''
 			self.pressed = 0
 			#if key == keyboard.Key.alt_l or key == keyboard.Key.alt_r:
 				#self.getAppName()
@@ -132,14 +136,15 @@ class Monitor:
 	
 	def getAppName(self):
 		global altTabFunc
-		app = win32gui.GetWindowText(win32gui.GetForegroundWindow())
+		hwnd = win32gui.GetForegroundWindow()
+		app = win32gui.GetWindowText(hwnd)
 		if self.appName == '':
 			self.appName = app
 			print('First: ' + self.appName)
 		elif not self.appName == app:
 			self.appName = app
 			print('SECOND : '+self.appName)
-			self.output.put(self.appName)
+			self.output.put('appName' + self.appName)
 
 def main(output):
 	monitor = Monitor(output) # output
