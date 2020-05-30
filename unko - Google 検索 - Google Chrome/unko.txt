@@ -1,9 +1,0 @@
-leftClick x=999y=6
-appNameêVÇµÇ¢É^Éu - Google Chrome
-u
-n
-k
-o
-enter
-alt
-leftClick x=1122y=440
